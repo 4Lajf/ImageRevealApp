@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .image-part {
+            animation: fadein 1s;
+            animation-play-state: paused;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 1s;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
+        .image-part.paused {
+            animation-play-state: paused;
+        }
+
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 10vw;
+            /* 50% of viewport width */
+            color: black;
+            transform: translate(-50%, -50%);
+            /* Centering */
+            z-index: 2;
+            /* Stay on top */
+        }
+
+        #info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            font-size: 50px;
+            font-weight: bolder;
+            color: black;
+            -webkit-text-stroke: 1px white;
+            z-index: 2;
+            /* Stay on top */
+        }
+
+        #initial {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            font-size: 50px;
+            font-weight: bolder;
+            color: black;
+            -webkit-text-stroke: 1px white;
+            z-index: 2;
+            /* Stay on top */
+        }
+
+        #game-container {
+            position: relative;
+            z-index: 1;
+            /* Stay below info and countdown */
+        }
+
+        .image-part.playing {
+            animation-play-state: running;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <div id="countdown"></div>
+        <div id="initial">Press spacebar to load the first image...</div>
+        <div id="info"></div>
+    </div>
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+
+    <script>
+        // Add your image file names here
+        const imageFiles = ['kamikatsu.png', 'shinda.png'];
+        let currentImageIndex = 0;
+        const infoElement = document.getElementById('info');
+        const initialElement = document.getElementById('initial');
+
+        const numParts = 5;
+        let polygonMasks = [];
+        let isImageLoaded = false;
+        let isImagePlaying = false;
+        let isImagePaused = false;
+        let disableSpacebar = false;
+        for (let i = 0; i < numParts; i++) {
+            const pointX = Math.random();
+            const pointY = Math.random();
+            polygonMasks.push([pointX, pointY]);
+        }
+
+        const image = new Image();
+        image.onload = function () {
+            isImageLoaded = true;
+        };
+
+
+        function loadNextImage() {
+            // Load the next image
+            const imagePath = 'images/' + imageFiles[currentImageIndex];
+            image.src = imagePath;
+
+            // Update the info text
+            initialElement.textContent = 'Press spacebar to start...'; // Clear the initial text
+            infoElement.textContent = `Image: ${imageFiles[currentImageIndex]}`;
+        }
+
+        function splitImage() {
+            // Countdown
+            let countdown = 0;
+            const countdownElement = document.getElementById('countdown');
+            countdownElement.textContent = "loading...";
+
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = "loading...";
+
+                if (countdown <= 0) {
+                    isImagePlaying = true;
+                    clearInterval(countdownInterval);
+                    countdownElement.textContent = '';
+                    const gameContainer = document.getElementById('game-container');
+                    const screenWidth = window.innerWidth;
+                    const screenHeight = window.innerHeight;
+
+                    const voronoi = d3.voronoi().extent([[0, 0], [screenWidth, screenHeight]]);
+                    const polygons = voronoi.polygons(polygonMasks.map(mask => [mask[0] * screenWidth, mask[1] * screenHeight]));
+
+                    gameContainer.style.width = `${screenWidth}px`;
+                    gameContainer.style.height = `${screenHeight}px`;
+
+                    const partCanvas = document.createElement('canvas');
+                    partCanvas.width = screenWidth;
+                    partCanvas.height = screenHeight;
+                    const partContext = partCanvas.getContext('2d');
+
+                    partContext.drawImage(image, 0, 0, screenWidth, screenHeight);
+
+                    polygons.forEach((polygon, i) => {
+                        const part = document.createElement('div');
+                        part.className = 'image-part';
+                        part.style.clipPath = `polygon(${polygon.map(point => `${point[0]}px ${point[1]}px`).join(',')})`;
+                        part.style.backgroundImage = `url(${partCanvas.toDataURL()})`;
+                        part.style.width = `${screenWidth}px`;
+                        part.style.height = `${screenHeight}px`;
+                        gameContainer.appendChild(part);
+                    });
+
+                    const parts = document.getElementsByClassName('image-part');
+
+                    let counter = 0;
+
+                    // create a function to control each part's animation
+                    function animatePart() {
+                        const partInterval = setInterval(() => {
+                            if (isImagePaused) {
+                                clearInterval(partInterval);
+                                animatePart();
+                            } else {
+                                if (counter < numParts) {
+                                    parts[counter].style.opacity = '1';
+                                    counter++;
+                                } else {
+                                    clearInterval(partInterval);
+                                    isImagePlaying = false;
+                                    isImageLoaded = false;
+                                    disableSpacebar = true;
+                                }
+                            }
+                        }, 2000);
+                    }
+                    animatePart();
+                }
+            }, 1000);
+        }
+
+        function resetGame() {
+            // Clear only the image parts
+            const parts = document.querySelectorAll('.image-part');
+            parts.forEach(part => part.remove());
+        }
+
+        // Handle keyboard events
+        window.addEventListener('keydown', event => {
+            switch (event.code) {
+                case 'Space':
+                    event.preventDefault();
+                    if (disableSpacebar === true) {
+                        return;
+                    }
+                    if (isImageLoaded) {
+                        console.log(isImagePlaying)
+                        if (isImagePlaying === false) {
+                            splitImage();
+                            initialElement.textContent = ''; // Clear the initial text
+                        } else if (isImagePlaying === true) {
+                            if (isImagePaused === false) {
+                                isImagePaused = true;
+                            } else {
+                                isImagePaused = false;
+                            }
+                            console.log('isPaused', isImagePaused)
+                        }
+                    } else {
+                        console.log(currentImageIndex)
+                        if (isImagePlaying === false && isImageLoaded === false) {
+                            if (currentImageIndex === 0) {
+                                loadNextImage();
+                            } else {
+                                currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
+                                resetGame();
+                                loadNextImage();
+                            }
+                        }
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (!event.ctrlKey) return; // Only handle Ctrl+ArrowRight
+                    event.preventDefault();
+                    isImagePlaying = false;
+                    isImageLoaded = false;
+                    disableSpacebar = false;
+                    // Load the next image
+                    currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
+                    resetGame();
+                    loadNextImage();
+                    break;
+                case 'ArrowLeft':
+                    if (!event.ctrlKey) return; // Only handle Ctrl+ArrowLeft
+                    event.preventDefault();
+                    isImagePlaying = false;
+                    isImageLoaded = false;
+                    disableSpacebar = false;
+                    // Load the previous image
+                    currentImageIndex = (currentImageIndex - 1 + imageFiles.length) % imageFiles.length;
+                    resetGame();
+                    loadNextImage();
+                    break;
+            }
+        });
+    </script>
+</body>
+
+</html>

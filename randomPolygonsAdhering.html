@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        #game-container {
+            display: flex;
+            /* Change to flex display */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .image-part {
+            flex-grow: 1;
+            /* Allow the image parts to expand and fill the container */
+            opacity: 0;
+            transition: opacity 1s;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container"></div>
+
+    <script>
+        // Specify the path to your image
+        const imagePath = 'shinda.png';
+
+        // Create 5 random polygon masks
+        const numParts = 5;
+        const polygonMasks = [];
+        for (let i = 0; i < numParts; i++) {
+            const polygon = generateRandomPolygon();
+            polygonMasks.push(polygon);
+        }
+
+        // Load the image
+        const image = new Image();
+        image.src = imagePath;
+        image.onload = splitImage;
+
+        // Split the image into parts using random polygon masks
+        function splitImage() {
+            // Calculate the width and height of each image part based on the screen size
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const partWidth = screenWidth / numParts;
+            const partHeight = screenHeight;
+
+            const gameContainer = document.getElementById('game-container');
+            gameContainer.style.width = `${screenWidth}px`;
+            gameContainer.style.height = `${screenHeight}px`;
+
+            const mergedPolygon = mergePolygons(polygonMasks);
+
+            const partCanvas = document.createElement('canvas');
+            partCanvas.width = screenWidth;
+            partCanvas.height = screenHeight;
+            const partContext = partCanvas.getContext('2d');
+
+            // Create a clip path using the merged polygon
+            partContext.beginPath();
+            mergedPolygon.forEach((point, index) => {
+                if (index === 0) {
+                    partContext.moveTo(point[0] * screenWidth, point[1] * screenHeight);
+                } else {
+                    partContext.lineTo(point[0] * screenWidth, point[1] * screenHeight);
+                }
+            });
+            partContext.closePath();
+            partContext.clip();
+
+            // Draw the image on the canvas
+            partContext.drawImage(image, 0, 0, screenWidth, screenHeight);
+
+            for (let i = 0; i < numParts; i++) {
+                const part = document.createElement('div');
+                part.className = 'image-part';
+                part.style.backgroundImage = `url(${partCanvas.toDataURL()})`;
+                part.style.backgroundPositionX = `${-i * partWidth}px`;
+                gameContainer.appendChild(part);
+            }
+
+            const parts = document.getElementsByClassName('image-part');
+
+            // Fade in the image parts one by one in a random order
+            let counter = 0;
+            const interval = setInterval(() => {
+                if (counter >= numParts) {
+                    clearInterval(interval);
+                    return;
+                }
+                parts[counter].style.opacity = '1';
+                counter++;
+            }, 250); // Adjust the interval to control the fade-in speed
+        }
+
+        // Generate a random polygon
+        function generateRandomPolygon() {
+            const polygon = [];
+            const numPoints = 5; // Number of points for the polygon (change as desired)
+            const minPointX = 0; // Minimum X coordinate for points (change as desired)
+            const maxPointX = 1; // Maximum X coordinate for points (change as desired)
+            const minPointY = 0; // Minimum Y coordinate for points (change as desired)
+            const maxPointY = 1; // Maximum Y coordinate for points (change as desired)
+
+            for (let i = 0; i < numPoints; i++) {
+                const pointX = Math.random() * (maxPointX - minPointX) + minPointX;
+                const pointY = Math.random() * (maxPointY - minPointY) + minPointY;
+                polygon.push([pointX, pointY]);
+            }
+
+            return polygon;
+        }
+
+        // Merge multiple polygons into a single polygon
+        function mergePolygons(polygons) {
+            const mergedPolygon = [];
+            for (const polygon of polygons) {
+                mergedPolygon.push(...polygon);
+            }
+            return mergedPolygon;
+        }
+    </script>
+</body>
+
+</html>
