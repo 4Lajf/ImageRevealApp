@@ -115,7 +115,7 @@
         const infoElement = document.getElementById('info');
         const initialElement = document.getElementById('initial');
 
-        const numParts = 200
+        const numParts = Math.floor(Math.random() * 225) + 175;
         // const numParts = Math.floor(Math.random() * 125) + 75;
         console.log(numParts)
         let polygonMasks = [];
@@ -179,8 +179,6 @@
                     // first, create a dataURL from the canvas
                     const partCanvasDataUrl = partCanvas.toDataURL();
 
-                    const imageParts = []; // to store the image parts
-
                     polygons.forEach((polygon, i) => {
                         const part = document.createElement('div');
                         part.className = 'image-part';
@@ -188,8 +186,10 @@
                         part.style.backgroundImage = `url(${partCanvasDataUrl})`; // use the data URL created outside the loop
                         part.style.width = `${screenWidth}px`;
                         part.style.height = `${screenHeight}px`;
-                        imageParts.push(part);
+                        gameContainer.appendChild(part);
                     });
+
+                    const parts = document.getElementsByClassName('image-part');
 
                     let counter = 0;
 
@@ -201,9 +201,7 @@
                                 animatePart();
                             } else {
                                 if (counter < numParts) {
-                                    const part = imageParts[counter];
-                                    gameContainer.appendChild(part); // append the part to the DOM
-                                    part.style.opacity = '1';
+                                    parts[counter].style.opacity = '1';
                                     counter++;
                                 } else {
                                     clearInterval(partInterval);
