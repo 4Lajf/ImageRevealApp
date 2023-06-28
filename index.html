@@ -17,7 +17,7 @@
         .image-part {
             position: absolute;
             opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+            transition: opacity 0.2s ease-in-out;
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center center;
@@ -113,6 +113,7 @@
         const initialElement = document.getElementById('initial');
 
         const numParts = Math.floor(Math.random() * 75) + 50;
+        let partInterval;
         let polygonMasks = [];
         let isImageLoaded = false;
         let isImagePlaying = false;
@@ -190,7 +191,7 @@
 
                     // create a function to control each part's animation
                     function animatePart() {
-                        const partInterval = setInterval(() => {
+                        partInterval = setInterval(() => {
                             if (isImagePaused) {
                                 clearInterval(partInterval);
                                 animatePart();
@@ -209,7 +210,7 @@
                                     disableSpacebar = true;
                                 }
                             }
-                        }, 750 /* 1000 */);
+                        }, 400 /* 1000 */);
                     }
                     animatePart();
                 }
