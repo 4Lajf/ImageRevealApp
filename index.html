@@ -46,7 +46,7 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            font-size: 50px;
+            font-size: 20px;
             font-weight: bolder;
             color: black;
             -webkit-text-stroke: 1px white;
@@ -58,7 +58,7 @@
             position: absolute;
             bottom: 0;
             right: 0;
-            font-size: 50px;
+            font-size: 20px;
             font-weight: bolder;
             color: black;
             -webkit-text-stroke: 1px white;
@@ -116,7 +116,8 @@
         const infoElement = document.getElementById('info');
         const initialElement = document.getElementById('initial');
 
-        const numParts = Math.floor(Math.random() * 126) + 90;
+        // const numParts = Math.floor(Math.random() * 200) + 150;
+        const numParts = 200;
         let polygonMasks = [];
         let isImageLoaded = false;
         let isImagePlaying = false;
@@ -141,7 +142,7 @@
 
             // Update the info text
             initialElement.textContent = 'Press spacebar to start...'; // Clear the initial text
-            infoElement.textContent = `Image: ${imageFiles[currentImageIndex]}`;
+            infoElement.textContent = imageFiles[currentImageIndex];
         }
 
         function splitImage() {
@@ -209,7 +210,7 @@
                                     disableSpacebar = true;
                                 }
                             }
-                        }, 2000);
+                        }, 1000);
                     }
                     animatePart();
                 }
