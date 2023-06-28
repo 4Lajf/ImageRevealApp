@@ -17,7 +17,7 @@
         .image-part {
             position: absolute;
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 1s ease-in-out;
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center center;
@@ -128,7 +128,7 @@
         const infoElement = document.getElementById('info');
         const initialElement = document.getElementById('initial');
 
-        const numParts = Math.floor(Math.random() * 175) + 50;
+        const numParts = 150
         let partInterval;
         let polygonMasks = [];
         let isImageLoaded = false;
