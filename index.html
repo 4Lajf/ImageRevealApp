@@ -116,7 +116,7 @@
         const infoElement = document.getElementById('info');
         const initialElement = document.getElementById('initial');
 
-        const numParts = 100;
+        const numParts = Math.floor(Math.random() * 126) + 90;
         let polygonMasks = [];
         let isImageLoaded = false;
         let isImagePlaying = false;
@@ -149,6 +149,7 @@
             let countdown = 0;
             const countdownElement = document.getElementById('countdown');
             countdownElement.textContent = "loading...";
+            initialElement.textContent = ''; // Clear the initial text
 
             const countdownInterval = setInterval(() => {
                 countdown--;
@@ -161,10 +162,9 @@
                     const gameContainer = document.getElementById('game-container');
                     const screenWidth = window.innerWidth;
                     const screenHeight = window.innerHeight;
-
                     const voronoi = d3.voronoi().extent([[0, 0], [screenWidth, screenHeight]]);
                     const polygons = voronoi.polygons(polygonMasks.map(mask => [mask[0] * screenWidth, mask[1] * screenHeight]));
-
+                    console.log(polygons)
                     gameContainer.style.width = `${screenWidth}px`;
                     gameContainer.style.height = `${screenHeight}px`;
 
@@ -175,11 +175,14 @@
 
                     partContext.drawImage(image, 0, 0, screenWidth, screenHeight);
 
+                    // first, create a dataURL from the canvas
+                    const partCanvasDataUrl = partCanvas.toDataURL();
+
                     polygons.forEach((polygon, i) => {
                         const part = document.createElement('div');
                         part.className = 'image-part';
                         part.style.clipPath = `polygon(${polygon.map(point => `${point[0]}px ${point[1]}px`).join(',')})`;
-                        part.style.backgroundImage = `url(${partCanvas.toDataURL()})`;
+                        part.style.backgroundImage = `url(${partCanvasDataUrl})`; // use the data URL created outside the loop
                         part.style.width = `${screenWidth}px`;
                         part.style.height = `${screenHeight}px`;
                         gameContainer.appendChild(part);
@@ -221,62 +224,97 @@
 
         // Handle keyboard events
         window.addEventListener('keydown', event => {
-            switch (event.code) {
-                case 'Space':
-                    event.preventDefault();
-                    if (disableSpacebar === true) {
-                        return;
-                    }
-                    if (isImageLoaded) {
-                        console.log(isImagePlaying)
-                        if (isImagePlaying === false) {
-                            splitImage();
-                            initialElement.textContent = ''; // Clear the initial text
-                        } else if (isImagePlaying === true) {
-                            if (isImagePaused === false) {
-                                isImagePaused = true;
-                            } else {
-                                isImagePaused = false;
-                            }
-                            console.log('isPaused', isImagePaused)
+            if (event.code === 'Space') {
+                event.preventDefault();
+                if (disableSpacebar === true) {
+                    return;
+                }
+                if (isImageLoaded) {
+                    console.log(isImagePlaying)
+                    if (isImagePlaying === false) {
+                        splitImage();
+                        initialElement.textContent = ''; // Clear the initial text
+                    } else if (isImagePlaying === true) {
+                        if (isImagePaused === false) {
+                            isImagePaused = true;
+                        } else {
+                            isImagePaused = false;
                         }
-                    } else {
-                        console.log(currentImageIndex)
-                        if (isImagePlaying === false && isImageLoaded === false) {
-                            if (currentImageIndex === 0) {
-                                loadNextImage();
-                            } else {
-                                currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
-                                resetGame();
-                                loadNextImage();
-                            }
+                        console.log('isPaused', isImagePaused)
+                    }
+                } else {
+                    console.log(currentImageIndex)
+                    if (isImagePlaying === false && isImageLoaded === false) {
+                        if (currentImageIndex === 0) {
+                            loadNextImage();
+                        } else {
+                            currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
+                            resetGame();
+                            loadNextImage();
                         }
                     }
-                    break;
-                case 'ArrowRight':
-                    if (!event.ctrlKey) return; // Only handle Ctrl+ArrowRight
-                    event.preventDefault();
-                    isImagePlaying = false;
-                    isImageLoaded = false;
-                    disableSpacebar = false;
-                    // Load the next image
-                    currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
-                    resetGame();
-                    loadNextImage();
-                    break;
-                case 'ArrowLeft':
-                    if (!event.ctrlKey) return; // Only handle Ctrl+ArrowLeft
-                    event.preventDefault();
-                    isImagePlaying = false;
-                    isImageLoaded = false;
-                    disableSpacebar = false;
-                    // Load the previous image
-                    currentImageIndex = (currentImageIndex - 1 + imageFiles.length) % imageFiles.length;
-                    resetGame();
-                    loadNextImage();
-                    break;
+                }
+            } else if (event.code === 'ArrowRight' && event.ctrlKey) {
+                event.preventDefault();
+                isImagePlaying = false;
+                isImageLoaded = false;
+                disableSpacebar = false;
+                // Load the next image
+                currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
+                resetGame();
+                loadNextImage();
+            } else if (event.code === 'ArrowLeft' && event.ctrlKey) {
+                event.preventDefault();
+                isImagePlaying = false;
+                isImageLoaded = false;
+                disableSpacebar = false;
+                // Load the previous image
+                currentImageIndex = (currentImageIndex - 1 + imageFiles.length) % imageFiles.length;
+                resetGame();
+                loadNextImage();
+            } else if (event.code === 'KeyS' && event.altKey) {
+                event.preventDefault();
+                saveAnimation();
+            } else if (event.code === 'KeyP' && event.altKey) {
+                event.preventDefault();
+                loadAnimation();
             }
         });
+
+        let savedImages = {};
+
+        function saveAnimation() {
+            if (isImageLoaded) {
+                const imageName = imageFiles[currentImageIndex];
+                localStorage.setItem(imageName, JSON.stringify(polygonMasks));
+                console.log(`Animation saved for image: ${imageName}`);
+                alert(`Animation saved for image: ${imageName}`);
+            } else {
+                alert('Image is not loaded cannot save animation')
+            }
+        }
+
+        function loadAnimation() {
+            if (!isImagePlaying) {
+                const imageName = imageFiles[currentImageIndex];
+                if (localStorage.getItem(imageName)) {
+                    loadNextImage();
+                    const savedMasks = JSON.parse(localStorage.getItem(imageName));
+                    if (savedMasks && isImageLoaded) {
+                        polygonMasks = savedMasks;
+                        splitImage();
+                    } else {
+                        console.log('savedMasks', savedMasks)
+                        console.log('isImageLoaded', isImageLoaded)
+                        alert('savedMasks not found or the image is not loaded')
+                    }
+                } else {
+                    alert(`No saved animation found for image: ${imageName}`);
+                }
+            } else {
+                alert('An animation is already playing')
+            }
+        }
     </script>
 </body>
 
