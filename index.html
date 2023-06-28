@@ -15,11 +15,9 @@
         }
 
         .image-part {
-            animation: fadein 1s;
-            animation-play-state: paused;
             position: absolute;
             opacity: 0;
-            transition: opacity 1s;
+            transition: opacity 0.5s ease-in-out;
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center center;
@@ -49,7 +47,6 @@
             font-size: 25px;
             font-weight: bolder;
             color: black;
-            -webkit-text-stroke: 1px white;
             z-index: 2;
             /* Stay on top */
         }
@@ -115,10 +112,8 @@
         const infoElement = document.getElementById('info');
         const initialElement = document.getElementById('initial');
 
-        const numParts = 200
         // const numParts = Math.floor(Math.random() * 75) + 50;
-        // const numParts = Math.floor(Math.random() * 175) + 50;
-        console.log(numParts)
+        const numParts = Math.floor(Math.random() * 175) + 50;
         let polygonMasks = [];
         let isImageLoaded = false;
         let isImagePlaying = false;
@@ -166,7 +161,6 @@
                     const screenHeight = window.innerHeight;
                     const voronoi = d3.voronoi().extent([[0, 0], [screenWidth, screenHeight]]);
                     const polygons = voronoi.polygons(polygonMasks.map(mask => [mask[0] * screenWidth, mask[1] * screenHeight]));
-                    console.log(polygons)
                     gameContainer.style.width = `${screenWidth}px`;
                     gameContainer.style.height = `${screenHeight}px`;
 
@@ -189,6 +183,7 @@
                         part.style.backgroundImage = `url(${partCanvasDataUrl})`; // use the data URL created outside the loop
                         part.style.width = `${screenWidth}px`;
                         part.style.height = `${screenHeight}px`;
+                        part.style.opacity = '0'; // initial opacity is 0
                         imageParts.push(part);
                     });
 
@@ -204,7 +199,9 @@
                                 if (counter < numParts) {
                                     const part = imageParts[counter];
                                     gameContainer.appendChild(part); // append the part to the DOM
-                                    part.style.opacity = '1';
+                                    setTimeout(() => {
+                                        part.style.opacity = '1'; // gradually change the opacity
+                                    }, 10); // a slight delay to ensure the part is in the DOM when we change its opacity
                                     counter++;
                                 } else {
                                     clearInterval(partInterval);
@@ -213,7 +210,7 @@
                                     disableSpacebar = true;
                                 }
                             }
-                        }, 500 /* 1000 */);
+                        }, 750 /* 1000 */);
                     }
                     animatePart();
                 }
@@ -234,7 +231,6 @@
                     return;
                 }
                 if (isImageLoaded) {
-                    console.log(isImagePlaying)
                     if (isImagePlaying === false) {
                         splitImage();
                         initialElement.textContent = ''; // Clear the initial text
@@ -247,7 +243,6 @@
                         console.log('isPaused', isImagePaused)
                     }
                 } else {
-                    console.log(currentImageIndex)
                     if (isImagePlaying === false && isImageLoaded === false) {
                         if (currentImageIndex === 0) {
                             loadNextImage();
