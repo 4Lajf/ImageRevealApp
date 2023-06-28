@@ -128,12 +128,15 @@
         const infoElement = document.getElementById('info');
         const initialElement = document.getElementById('initial');
 
-        const numParts = Math.floor(Math.random() * 75) + 50;
+        const numParts = Math.floor(Math.random() * 175) + 50;
         let partInterval;
         let polygonMasks = [];
         let isImageLoaded = false;
         let isImagePlaying = false;
         let partsRevealed = 0;
+        let imageParts = [];
+        let visibleParts = [];
+        let hiddenParts = [];
 
         for (let i = 0; i < numParts; i++) {
             const pointX = Math.random();
@@ -146,14 +149,14 @@
             isImageLoaded = true;
         };
 
-        function loadNextImage() {
+        function loadNextImage(imageIndex) {
             // Load the next image
-            const imagePath = 'images/' + imageFiles[currentImageIndex];
+            const imagePath = 'images/' + imageFiles[imageIndex];
             image.src = imagePath;
 
             // Update the info text
             initialElement.textContent = 'Press spacebar to start...';
-            infoElement.textContent = imageFiles[currentImageIndex];
+            infoElement.textContent = imageFiles[imageIndex];
         }
 
         function splitImage() {
@@ -188,8 +191,6 @@
 
                     const partCanvasDataUrl = partCanvas.toDataURL();
 
-                    const imageParts = [];
-
                     polygons.forEach((polygon, i) => {
                         const part = document.createElement('div');
                         part.className = 'image-part';
@@ -201,6 +202,8 @@
                         gameContainer.appendChild(part);
                         imageParts.push(part);
                     });
+                    // create these arrays somewhere in your code
+                    hiddenParts = Array.from(imageParts)
                     setTimeout(() => {
                         revealParts();
                     }, 1000);
@@ -209,42 +212,41 @@
         }
 
         function revealParts() {
-            const revealCount = Math.ceil(numParts / 6);
-            let revealed = 0;
-            while (revealed < revealCount) {
-                let index = Math.floor(Math.random() * numParts);
-                const part = document.querySelectorAll('.image-part')[index];
-                if (part && part.style.opacity == '0') {
-                    part.style.opacity = '1';
-                    revealed++;
-                    partsRevealed++;
+            const revealCount = Math.ceil(imageParts.length / 6);
+            for (let i = 0; i < revealCount; i++) {
+                if (hiddenParts.length === 0) {
+                    break; // if there's nothing more to reveal, break the loop
                 }
+
+                // choose a random index from the hidden parts
+                const randomIndex = Math.floor(Math.random() * hiddenParts.length);
+
+                // reveal the part and update the arrays
+                hiddenParts[randomIndex].style.opacity = '1';
+                visibleParts.push(hiddenParts[randomIndex]);
+                hiddenParts.splice(randomIndex, 1);
             }
-            console.log(partsRevealed, partsRevealed + revealCount, numParts, partsRevealed >= numParts)
-            if (partsRevealed >= numParts) {
-                revealCount = numParts - partsRevealed;
-                console.log(revealCount);
-                revealed = 0;
-                while (revealed < revealCount) {
-                    let index = Math.floor(Math.random() * numParts);
-                    const part = document.querySelectorAll('.image-part')[index];
-                    if (part && part.style.opacity == '0') {
-                        part.style.opacity = '1';
-                        revealed++;
-                        partsRevealed++;
-                    }
-                }
+
+            // if there are no more hidden parts, set the flags
+            if (hiddenParts.length === 0) {
+                imageParts = [];
+                clearInterval(partInterval);
                 isImagePlaying = false;
                 isImageLoaded = false;
             }
         }
 
         function resetGame() {
+            clearInterval(partInterval);
+            isImagePlaying = false;
+            isImageLoaded = false;
+            imageParts = [];
             partsRevealed = 0;
-            const gameContainer = document.getElementById('game-container');
-            while (gameContainer.firstChild) {
-                gameContainer.firstChild.remove();
-            }
+
+            const images = document.querySelectorAll('.image-part')
+            images.forEach(image => {
+                image.remove();
+            });
         }
 
         // Handle keyboard events
@@ -261,32 +263,22 @@
                 } else {
                     if (isImagePlaying === false && isImageLoaded === false) {
                         if (currentImageIndex === 0) {
-                            loadNextImage();
-                        } else {
-                            currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
-                            resetGame();
-                            loadNextImage();
+                            loadNextImage(currentImageIndex);
                         }
                     }
                 }
             } else if (event.code === 'ArrowRight' && event.ctrlKey) {
                 event.preventDefault();
-                clearInterval(partInterval);
-                isImagePlaying = false;
-                isImageLoaded = false;
                 // Load the next image
-                currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
                 resetGame();
-                loadNextImage();
+                currentImageIndex = (currentImageIndex + 1) % imageFiles.length;
+                loadNextImage(currentImageIndex);
             } else if (event.code === 'ArrowLeft' && event.ctrlKey) {
                 event.preventDefault();
-                clearInterval(partInterval);
-                isImagePlaying = false;
-                isImageLoaded = false;
                 // Load the previous image
-                currentImageIndex = (currentImageIndex - 1 + imageFiles.length) % imageFiles.length;
                 resetGame();
-                loadNextImage();
+                currentImageIndex = (currentImageIndex - 1 + imageFiles.length) % imageFiles.length;
+                loadNextImage(currentImageIndex);
             }
         });
     </script>
