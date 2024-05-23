@@ -1,120 +1,119 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-
-        #game-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            height: 100vh;
-            width: 100vw;
-        }
-
-        .image-part {
-            opacity: 0;
-            transition: opacity 1s;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center center;
-        }
-    </style>
-</head>
-
-<body>
-    <div id="game-container"></div>
-
-    <script>
-        // Specify the path to your image
-        const imagePath = 'shinda.png';
-
-        // Create a 4x4 grid
-        const numRows = 4;
-        const numCols = 4;
-        const numParts = numRows * numCols;
-
-        // Load the image
-        const image = new Image();
-        image.src = imagePath;
-        image.onload = splitImage;
-
-        // Split the image into parts
-        function splitImage() {
-            // Calculate the width and height of each image part based on the screen size
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const partWidth = screenWidth / numCols;
-            const partHeight = screenHeight / numRows;
-
-            // Create a canvas to resize the image
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = screenWidth;
-            canvas.height = screenHeight;
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-            const gameContainer = document.getElementById('game-container');
-            gameContainer.style.width = `${screenWidth}px`;
-            gameContainer.style.height = `${screenHeight}px`;
-
-            const parts = [];
-            for (let row = 0; row < numRows; row++) {
-                for (let col = 0; col < numCols; col++) {
-                    const partCanvas = document.createElement('canvas');
-                    partCanvas.width = partWidth;
-                    partCanvas.height = partHeight;
-                    const partContext = partCanvas.getContext('2d');
-                    partContext.drawImage(
-                        canvas,
-                        col * partWidth,
-                        row * partHeight,
-                        partWidth,
-                        partHeight,
-                        0,
-                        0,
-                        partCanvas.width,
-                        partCanvas.height
-                    );
-                    const part = document.createElement('div');
-                    part.className = 'image-part';
-                    part.style.backgroundImage = `url(${partCanvas.toDataURL()})`;
-                    parts.push(part);
-                }
+    <head>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
             }
 
-            // Shuffle the parts array
-            shuffleArray(parts);
-
-            // Append the shuffled parts to the game container
-            parts.forEach((part) => {
-                gameContainer.appendChild(part);
-            });
-
-            // Fade in the image parts one by one in a random order
-            let counter = 0;
-            const interval = setInterval(() => {
-                if (counter >= numParts) {
-                    clearInterval(interval);
-                    return;
-                }
-                parts[counter].style.opacity = '1';
-                counter++;
-            }, 250); // Adjust the interval to control the fade-in speed
-        }
-
-        // Utility function to shuffle an array
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+            #game-container {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                height: 100vh;
+                width: 100vw;
             }
-        }
-    </script>
-</body>
 
+            .image-part {
+                opacity: 0;
+                transition: opacity 1s;
+                background-size: cover;
+                background-repeat: no-repeat;
+                background-position: center center;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="game-container"></div>
+
+        <script>
+            // Specify the path to your image
+            const imagePath = 'images/1.png';
+
+            // Create a 4x4 grid
+            const numRows = 4;
+            const numCols = 4;
+            const numParts = numRows * numCols;
+
+            // Load the image
+            const image = new Image();
+            image.src = imagePath;
+            image.crossOrigin = "anonymous"
+            image.onload = splitImage;
+
+            // Split the image into parts
+            function splitImage() {
+                // Calculate the width and height of each image part based on the screen size
+                const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
+                const partWidth = screenWidth / numCols;
+                const partHeight = screenHeight / numRows;
+
+                // Create a canvas to resize the image
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = screenWidth;
+                canvas.height = screenHeight;
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+                const gameContainer = document.getElementById('game-container');
+                gameContainer.style.width = `${screenWidth}px`;
+                gameContainer.style.height = `${screenHeight}px`;
+
+                const parts = [];
+                for (let row = 0; row < numRows; row++) {
+                    for (let col = 0; col < numCols; col++) {
+                        const partCanvas = document.createElement('canvas');
+                        partCanvas.width = partWidth;
+                        partCanvas.height = partHeight;
+                        const partContext = partCanvas.getContext('2d');
+                        partContext.drawImage(
+                            canvas,
+                            col * partWidth,
+                            row * partHeight,
+                            partWidth,
+                            partHeight,
+                            0,
+                            0,
+                            partCanvas.width,
+                            partCanvas.height
+                        );
+                        const part = document.createElement('div');
+                        part.className = 'image-part';
+                        part.style.backgroundImage = `url(${partCanvas.toDataURL()})`;
+                        parts.push(part);
+                    }
+                }
+
+                // Shuffle the parts array
+                shuffleArray(parts);
+
+                // Append the shuffled parts to the game container
+                parts.forEach((part) => {
+                    gameContainer.appendChild(part);
+                });
+
+                // Fade in the image parts one by one in a random order
+                let counter = 0;
+                const interval = setInterval(() => {
+                    if (counter >= numParts) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    parts[counter].style.opacity = '1';
+                    counter++;
+                }, 250); // Adjust the interval to control the fade-in speed
+            }
+
+            // Utility function to shuffle an array
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+        </script>
+    </body>
 </html>
