@@ -1,133 +1,132 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
 
-<head>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
+            #game-container {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                grid-template-rows: 1fr;
+                height: 100vh;
+                width: 100vw;
+            }
 
-        #game-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: 1fr;
-            height: 100vh;
-            width: 100vw;
-        }
+            .image-part {
+                opacity: 0;
+                transition: opacity 1s;
+                background-size: cover;
+                background-repeat: no-repeat;
+                background-position: center center;
+            }
+        </style>
+    </head>
 
-        .image-part {
-            opacity: 0;
-            transition: opacity 1s;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center center;
-        }
-    </style>
-</head>
+    <body>
+        <div id="game-container"></div>
 
-<body>
-    <div id="game-container"></div>
+        <script>
+            // Specify the path to your image
+            const imagePath = 'images/1.png';
 
-    <script>
-        // Specify the path to your image
-        const imagePath = 'shinda.png';
-
-        // Create 5 random polygon masks
-        const numParts = 5;
-        const polygonMasks = [];
-        for (let i = 0; i < numParts; i++) {
-            const polygon = generateRandomPolygon();
-            polygonMasks.push(polygon);
-        }
-
-        // Load the image
-        const image = new Image();
-        image.src = imagePath;
-        image.onload = splitImage;
-
-        // Split the image into parts using random polygon masks
-        function splitImage() {
-            // Calculate the width and height of each image part based on the screen size
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const partWidth = screenWidth / numParts;
-            const partHeight = screenHeight;
-
-            const gameContainer = document.getElementById('game-container');
-            gameContainer.style.width = `${screenWidth}px`;
-            gameContainer.style.height = `${screenHeight}px`;
-
+            // Create 5 random polygon masks
+            const numParts = 5;
+            const polygonMasks = [];
             for (let i = 0; i < numParts; i++) {
-                const partCanvas = document.createElement('canvas');
-                partCanvas.width = partWidth;
-                partCanvas.height = partHeight;
-                const partContext = partCanvas.getContext('2d');
-
-                // Create a clip path using the random polygon mask
-                const polygonMask = polygonMasks[i];
-                partContext.beginPath();
-                polygonMask.forEach((point, index) => {
-                    if (index === 0) {
-                        partContext.moveTo(point[0] * partWidth, point[1] * partHeight);
-                    } else {
-                        partContext.lineTo(point[0] * partWidth, point[1] * partHeight);
-                    }
-                });
-                partContext.closePath();
-                partContext.clip();
-
-                // Draw the image on the canvas
-                partContext.drawImage(
-                    image,
-                    i * partWidth,
-                    0,
-                    partWidth,
-                    partHeight,
-                    0,
-                    0,
-                    partCanvas.width,
-                    partCanvas.height
-                );
-
-                const part = document.createElement('div');
-                part.className = 'image-part';
-                part.style.backgroundImage = `url(${partCanvas.toDataURL()})`;
-                gameContainer.appendChild(part);
+                const polygon = generateRandomPolygon();
+                polygonMasks.push(polygon);
             }
 
-            const parts = document.getElementsByClassName('image-part');
+            // Load the image
+            const image = new Image();
+            image.src = imagePath;
+            image.crossOrigin = "anonymous"
+            image.onload = splitImage;
 
-            // Fade in the image parts one by one in a random order
-            let counter = 0;
-            const interval = setInterval(() => {
-                if (counter >= numParts) {
-                    clearInterval(interval);
-                    return;
+            // Split the image into parts using random polygon masks
+            function splitImage() {
+                // Calculate the width and height of each image part based on the screen size
+                const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
+                const partWidth = screenWidth / numParts;
+                const partHeight = screenHeight;
+
+                const gameContainer = document.getElementById('game-container');
+                gameContainer.style.width = `${screenWidth}px`;
+                gameContainer.style.height = `${screenHeight}px`;
+
+                for (let i = 0; i < numParts; i++) {
+                    const partCanvas = document.createElement('canvas');
+                    partCanvas.width = partWidth;
+                    partCanvas.height = partHeight;
+                    const partContext = partCanvas.getContext('2d');
+
+                    // Create a clip path using the random polygon mask
+                    const polygonMask = polygonMasks[i];
+                    partContext.beginPath();
+                    polygonMask.forEach((point, index) => {
+                        if (index === 0) {
+                            partContext.moveTo(point[0] * partWidth, point[1] * partHeight);
+                        } else {
+                            partContext.lineTo(point[0] * partWidth, point[1] * partHeight);
+                        }
+                    });
+                    partContext.closePath();
+                    partContext.clip();
+
+                    // Draw the image on the canvas
+                    partContext.drawImage(
+                        image,
+                        i * partWidth,
+                        0,
+                        partWidth,
+                        partHeight,
+                        0,
+                        0,
+                        partCanvas.width,
+                        partCanvas.height
+                    );
+
+                    const part = document.createElement('div');
+                    part.className = 'image-part';
+                    part.style.backgroundImage = `url(${partCanvas.toDataURL()})`;
+                    gameContainer.appendChild(part);
                 }
-                parts[counter].style.opacity = '1';
-                counter++;
-            }, 250); // Adjust the interval to control the fade-in speed
-        }
 
-        // Generate a random polygon
-        function generateRandomPolygon() {
-            const polygon = [];
-            const numPoints = 5; // Number of points for the polygon (change as desired)
-            const minPointX = 0; // Minimum X coordinate for points (change as desired)
-            const maxPointX = 1; // Maximum X coordinate for points (change as desired)
-            const minPointY = 0; // Minimum Y coordinate for points (change as desired)
-            const maxPointY = 1; // Maximum Y coordinate for points (change as desired)
+                const parts = document.getElementsByClassName('image-part');
 
-            for (let i = 0; i < numPoints; i++) {
-                const pointX = Math.random() * (maxPointX - minPointX) + minPointX;
-                const pointY = Math.random() * (maxPointY - minPointY) + minPointY;
-                polygon.push([pointX, pointY]);
+                // Fade in the image parts one by one in a random order
+                let counter = 0;
+                const interval = setInterval(() => {
+                    if (counter >= numParts) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    parts[counter].style.opacity = '1';
+                    counter++;
+                }, 250); // Adjust the interval to control the fade-in speed
             }
 
-            return polygon;
-        }
-    </script>
-</body>
+            // Generate a random polygon
+            function generateRandomPolygon() {
+                const polygon = [];
+                const numPoints = 5; // Number of points for the polygon (change as desired)
+                const minPointX = 0; // Minimum X coordinate for points (change as desired)
+                const maxPointX = 1; // Maximum X coordinate for points (change as desired)
+                const minPointY = 0; // Minimum Y coordinate for points (change as desired)
+                const maxPointY = 1; // Maximum Y coordinate for points (change as desired)
 
+                for (let i = 0; i < numPoints; i++) {
+                    const pointX = Math.random() * (maxPointX - minPointX) + minPointX;
+                    const pointY = Math.random() * (maxPointY - minPointY) + minPointY;
+                    polygon.push([pointX, pointY]);
+                }
+
+                return polygon;
+            }
+        </script>
+    </body>
 </html>
